@@ -55,7 +55,7 @@ These are the defaults; you can use other pins by setting the options. Keep the 
 2. **Add the component.** Either use it straight from GitHub:
    ```yaml
    external_components:
-     - source: github://YOUR-GITHUB-USER/ITHO-HRU400-control-for-Home-Assistant-ESPHome
+     - source: github://JohnHalfords/esphome-itho-hru400
        components: [itho_hru400]
    ```
    or copy the folder `components/itho_hru400` into `<your ESPHome config folder>/components/` and use `type: local, path: components` (see `example.yaml`).

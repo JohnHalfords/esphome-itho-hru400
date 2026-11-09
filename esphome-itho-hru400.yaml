@@ -18,7 +18,7 @@ esp32:
 
 # Use the component straight from GitHub ...
 external_components:
-  - source: github://YOUR-GITHUB-USER/ITHO-HRU400-control-for-Home-Assistant-ESPHome   # CHANGE ME
+  - source: github://JohnHalfords/esphome-itho-hru400
     components: [itho_hru400]
 # ... or from a local folder (copy components/itho_hru400 into <config dir>/components/):
 #  - source:
