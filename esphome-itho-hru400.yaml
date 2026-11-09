@@ -1,0 +1,172 @@
+# ITHO HRU400 control for Home Assistant ESPHome - example configuration
+# Copy this file, then adjust everything marked with "CHANGE ME". Full option reference: README.md
+#
+# Credits: radio driver by Arjen Hiemstra et al. (ithowifi), ESPHome Itho work by Ronald Hiemstra,
+#          ESPHome port by John Halfords with debugging and rework by Claude (Anthropic).
+
+substitutions:
+  device_name: hru400-control
+
+esphome:
+  name: ${device_name}
+  friendly_name: HRU400
+
+esp32:
+  board: esp32dev
+  framework:
+    type: arduino            # the CC1101 driver needs the Arduino framework
+
+# Use the component straight from GitHub ...
+external_components:
+  - source: github://YOUR-GITHUB-USER/ITHO-HRU400-control-for-Home-Assistant-ESPHome   # CHANGE ME
+    components: [itho_hru400]
+# ... or from a local folder (copy components/itho_hru400 into <config dir>/components/):
+#  - source:
+#      type: local
+#      path: components
+#    components: [itho_hru400]
+
+logger:
+  level: INFO                # use DEBUG together with debug_rx: true only while troubleshooting
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+# ------------------------------------------------------------------------------------------------------------
+# The component
+# ------------------------------------------------------------------------------------------------------------
+itho_hru400:
+  id: itho_radio
+
+  # --- Identity -------------------------------------------------------------------------------------------
+  # RF ID of YOUR HRU400 (6 hex digits, always in quotes). Not known yet? Use "000000", set debug_rx: true,
+  # press a button on your own remote and read the destination ID of the 0x22F1 message in the log.
+  hru_id: "000000"                  # CHANGE ME
+  # RF ID this ESP uses as its virtual remote. Pick your own random value; it must not exist in your house.
+  remote_id: "0A3AC4"               # CHANGE ME (optional)
+
+  # --- Wiring (ESP32 GPIO numbers; these are the defaults) ----------------------------------------------------
+  cs_pin: 22
+  sck_pin: 18
+  miso_pin: 19
+  mosi_pin: 23
+  gdo0_pin: 16
+
+  # --- Radio tuning ---------------------------------------------------------------------------------------
+  # Frequency trim, 1 unit = 1.587 kHz. Start with 0, then follow "Frequency tuning" in the README:
+  # copy the "suggested freq_offset" from the STATUS log line.
+  freq_offset: 0
+
+  # --- Transmit behaviour (defaults are fine for most setups) -----------------------------------------------
+  tx_repeats: 3                     # frames per attempt (a real Spider sends 3)
+  tx_gap: 50                        # ms between those frames
+  command_attempts: 5               # resend until the HRU400 confirms the new state (1 = send once)
+  status_poll_interval: 60s         # ask the HRU400 for its status; 0s = only listen
+
+  # --- Logging ----------------------------------------------------------------------------------------------
+  discover_devices: true            # log every new RF sender once: helps to find your sensor / Spider IDs
+  debug_rx: false                   # chatty per-packet logging, only for troubleshooting
+
+  # --- Entities reported by the HRU400 itself -----------------------------------------------------------------
+  fan_speed:
+    name: "Ventilation Speed"
+  humidity:
+    name: "Humidity"
+  timer:
+    name: "Timer"                   # "10 min" / "20 min" / "30 min" / "none"
+  timer_remaining:
+    name: "Timer Remaining"         # counts down, in minutes
+  last_command:
+    name: "Last Command"            # last command another remote sent to your HRU400
+  last_control_source:
+    name: "Last Control Source"     # RF ID of that remote
+
+  # --- RF sensors and Spiders (find the IDs in the "Discovery" log lines) ----------------------------------------
+  devices:
+    - type: co2                     # RFT-CO2 sensor
+      rf_id: "AAAAAA"               # CHANGE ME
+      name: "Living room CO2"
+    - type: humidity                # RFT-RV humidity sensor
+      rf_id: "BBBBBB"               # CHANGE ME
+      name: "Bathroom Humidity"
+    - type: temperature             # Spider / zone controller (add one entry per Spider)
+      rf_id: "CCCCCC"               # CHANGE ME
+      name: "Spider 1 Temperature"
+
+# ------------------------------------------------------------------------------------------------------------
+# Buttons: the numbers are IthoCommand values (see IthoPacket.h)
+# ------------------------------------------------------------------------------------------------------------
+button:
+  - platform: template
+    name: "Low"
+    icon: mdi:fan-speed-1
+    on_press:
+      - lambda: 'id(itho_radio).command(4);'
+  - platform: template
+    name: "Stand 2"
+    icon: mdi:fan-speed-2
+    on_press:
+      - lambda: 'id(itho_radio).command(5);'
+  - platform: template
+    name: "Stand 3"
+    icon: mdi:fan-speed-3
+    on_press:
+      - lambda: 'id(itho_radio).command(6);'
+  - platform: template
+    name: "Auto"
+    icon: mdi:fan-auto
+    on_press:
+      - lambda: 'id(itho_radio).command(11);'
+  - platform: template
+    name: "Timer 10 Minutes"
+    icon: mdi:timer
+    on_press:
+      - lambda: 'id(itho_radio).command(8);'
+  - platform: template
+    name: "Timer 20 Minutes"
+    icon: mdi:timer
+    on_press:
+      - lambda: 'id(itho_radio).command(9);'
+  - platform: template
+    name: "Timer 30 Minutes"
+    icon: mdi:timer
+    on_press:
+      - lambda: 'id(itho_radio).command(10);'
+  # Pairing. Pair only while the HRU400 is in pairing mode. Leave REMOVES this ESP as a remote.
+  - platform: template
+    name: "Pair Remote Control"
+    icon: mdi:link-plus
+    on_press:
+      - lambda: 'id(itho_radio).join();'
+  - platform: template
+    name: "Leave Remote Control (REMOVES PAIRING!)"
+    icon: mdi:link-off
+    on_press:
+      - lambda: 'id(itho_radio).leave();'
+  - platform: restart
+    name: "Restart"
+
+# ------------------------------------------------------------------------------------------------------------
+# Diagnostics (optional)
+# ------------------------------------------------------------------------------------------------------------
+sensor:
+  - platform: uptime
+    type: seconds
+    name: "Uptime"
+  - platform: wifi_signal
+    name: "WiFi Signal"
+
+text_sensor:
+  - platform: version
+    name: "ESPHome Version"
+    hide_timestamp: true
+    hide_hash: true
