@@ -223,8 +223,10 @@ The HRU400 sends its status as a burst to every device that is paired with it, o
 
 ## License
 
-The radio driver files are derived from [ithowifi](https://github.com/arjenhiemstra/ithowifi); their original copyright and license remain applicable, and as a derived work this project has to follow that license (GPL-3.0 as far as known: please check the upstream repository and add the matching `LICENSE` file to your repository).
+The radio driver files are derived from [ithowifi](https://github.com/arjenhiemstra/ithowifi); their original copyright and license remain applicable, and as a derived work this project has to follow that license (GPL-3.0 as far as known)
 
 ## Contributing
 
 Reports about other Itho units, other remotes and sensors, and corrections to the protocol notes are very welcome. When you open an issue, include the log (`logger: level: DEBUG` with `debug_rx: true`) and the `STATUS` lines.
+
+Or email me: halfordsj@gmail.com
