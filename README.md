@@ -58,9 +58,9 @@ These are the defaults; you can use other pins by setting the options. Keep the 
      - source: github://JohnHalfords/esphome-itho-hru400
        components: [itho_hru400]
    ```
-   or copy the folder `components/itho_hru400` into `<your ESPHome config folder>/components/` and use `type: local, path: components` (see `example.yaml`).
+   or copy the folder `components/itho_hru400` into `<your ESPHome config folder>/components/` and use `type: local, path: components` (see `esphome-itho-hru400.yaml`).
 3. **Create `secrets.yaml`** from `secrets.example.yaml` and put in your own WiFi, API key and OTA password.
-4. **Copy `example.yaml`**, rename it, and fill in at least `hru_id` (see next section).
+4. **Copy `esphome-itho-hru400.yaml`**, and fill in at least `hru_id` (see next section).
 5. **Flash** it, add the device to Home Assistant, and open the ESPHome log.
 
 ### Step 1: find the RF ID of your HRU400
